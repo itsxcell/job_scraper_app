@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Results</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1em;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+        select, input[type="text"] {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Scraped Job Listings</h2>
+
+    <!-- 🔍 Filter Section -->
+    <div>
+        <label>Filter by Location:</label>
+        <input type="text" id="locationFilter" placeholder="e.g. Lagos, Nigeria">
+
+        <label>Time Posted:</label>
+        <select id="timeFilter">
+            <option value="">Any</option>
+            <option value="24">Past 24 hours</option>
+            <option value="week">Past week</option>
+            <option value="month">Past month</option>
+        </select>
+
+        <button onclick="applyFilters()">Apply Filters</button>
+    </div>
+
+    {% if jobs %}
+        <table id="jobsTable">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Company</th>
+                    <th>Time Posted</th>
+                    <th>Applicants</th>
+                    <th>Location</th>
+                    <th>Apply Link</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in jobs %}
+                <tr>
+                    <td>{{ job.job_title }}</td>
+                    <td>{{ job.company_name }}</td>
+                    <td class="time">{{ job.time_posted }}</td>
+                    <td>{{ job.num_applicant }}</td>
+                    <td class="location">{{ job.job_location }}</td>
+                    <td><a href="{{ job.apply_link }}" target="_blank">Apply</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if excel_available %}
+        <br>
+        <a href="{{ url_for('download_excel') }}">Download Excel File</a>
+        {% endif %}
+    {% else %}
+        <p>No job listings found.</p>
+    {% endif %}
+
+    <script>
+        function applyFilters() {
+            const locationValue = document.getElementById("locationFilter").value.toLowerCase();
+            const timeValue = document.getElementById("timeFilter").value.toLowerCase();
+
+            const rows = document.querySelectorAll("#jobsTable tbody tr");
+
+            rows.forEach(row => {
+                const location = row.querySelector(".location").textContent.toLowerCase();
+                const time = row.querySelector(".time").textContent.toLowerCase();
+
+                let show = true;
+
+                if (locationValue && !location.includes(locationValue)) {
+                    show = false;
+                }
+
+                if (timeValue) {
+                    if (timeValue === "24" && !time.includes("24")) show = false;
+                    if (timeValue === "week" && !(time.includes("day") || time.includes("week"))) show = false;
+                    if (timeValue === "month" && !(time.includes("day") || time.includes("week") || time.includes("month"))) show = false;
+                }
+
+                row.style.display = show ? "" : "none";
+            });
+        }
+    </script>
+</body>
+</html>
